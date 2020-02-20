@@ -75,16 +75,18 @@ RESIN_CONFIGS[tpg] = " \
                 CONFIG_VIDEO_TEGRA_VI_TPG=m \
 "
 
+RESIN_CONFIGS_append_jetson-tx1 = " compat"
 RESIN_CONFIGS_append_jetson-tx2 = " compat"
 RESIN_CONFIGS[compat] = " \
                 CONFIG_COMPAT=y \
 "
 
+RESIN_CONFIGS_remove_jetson-tx1 = " brcmfmac"
 RESIN_CONFIGS_append_jetson-tx2 = " uvc"
 RESIN_CONFIGS[uvc] = " \
                 CONFIG_USB_VIDEO_CLASS=m \
                 CONFIG_USB_VIDEO_CLASS_INPUT_EVDEV=y \
-                "
+"
 
 RESIN_CONFIGS_DEPS[uvc] = " \
                 CONFIG_MEDIA_CAMERA_SUPPORT=y \
@@ -97,37 +99,37 @@ RESIN_CONFIGS_DEPS[uvc] = " \
                 CONFIG_USB_GSPCA=m \
                 CONFIG_SND_USB=y \
                 CONFIG_SND_USB_AUDIO=m \
-                "
+"
 
 RESIN_CONFIGS_append_jetson-tx2 = " egalax"
 RESIN_CONFIGS[egalax] = " \
                 CONFIG_TOUCHSCREEN_EGALAX=m \
-                "
+"
 
 RESIN_CONFIGS_append_jetson-tx2 = " serial"
 RESIN_CONFIGS[serial] = " \
                 CONFIG_USB_SERIAL_GENERIC=y \
-                "
+"
 
 RESIN_CONFIGS_append_jetson-tx2 = " spi"
 RESIN_CONFIGS[spi] = " \
                 CONFIG_SPI=y \
                 CONFIG_SPI_MASTER=y \
                 CONFIG_SPI_SPIDEV=m \
-                "
+"
 RESIN_CONFIGS_DEPS[spi] = " \
                 CONFIG_QSPI_TEGRA186=y \
                 CONFIG_SPI_TEGRA144=y \
-                "
+"
 
 RESIN_CONFIGS_append_jetson-tx2 = " gamepad"
 RESIN_CONFIGS[gamepad] = " \
                 CONFIG_JOYSTICK_XPAD=m \
-                "
+"
 RESIN_CONFIGS_DEPS[gamepad] = " \
                 CONFIG_INPUT_JOYSTICK=y \
                 CONFIG_USB_ARCH_HAS_HCD=y \
-                "
+"
 
 RESIN_CONFIGS_append_jetson-tx2 = " can"
 RESIN_CONFIGS[can] = " \
@@ -149,13 +151,15 @@ KERNEL_MODULE_PROBECONF_srd3-tx2 += " nvhost-vi-tpg tegra-udrm"
 
 KERNEL_ROOTSPEC_jetson-nano = "\${resin_kernel_root} ro rootwait"
 KERNEL_ROOTSPEC_jn30b-nano = "\${resin_kernel_root} ro rootwait"
-KERNEL_ROOTSPEC_jetson-tx2 = " \${resin_kernel_root} ro rootwait sdhci_tegra.en_boot_part_access=1"
+KERNEL_ROOTSPEC_jetson-tx2 = " \${resin_kernel_root} ro rootwait pcie_aspm=off"
+KERNEL_ROOTSPEC_jetson-tx1 = " \${resin_kernel_root} ro rootwait"
 KERNEL_ROOTSPEC_jetson-xavier = ""
 
 # Since 32.1 on tx2, after kernel is loaded sd card becomes mmcblk2 opposed
 # to u-boot where it was 1. This is another cause of failure of
 # previous flasher images.  Use label to distinguish rootfs
-KERNEL_ROOTSPEC_FLASHER_jetson-tx2 = " root=LABEL=flash-rootA ro rootwait sdhci_tegra.en_boot_part_access=1 flasher"
+KERNEL_ROOTSPEC_FLASHER_jetson-tx2 = " root=LABEL=flash-rootA ro rootwait flasher pcie_aspm=off"
+KERNEL_ROOTSPEC_FLASHER_jetson-tx1 = " root=LABEL=flash-rootA ro rootwait flasher"
 
 generate_extlinux_conf() {
     install -d ${D}/${KERNEL_IMAGEDEST}/extlinux
@@ -167,7 +171,7 @@ MENU TITLE Boot Options
 LABEL primary
       MENU LABEL primary ${KERNEL_IMAGETYPE}
       LINUX /${KERNEL_IMAGETYPE}
-      APPEND \${cbootargs} ${kernelRootspec} \${os_cmdline}
+      APPEND \${cbootargs} ${kernelRootspec} \${os_cmdline} sdhci_tegra.en_boot_part_access=1
 EOF
     kernelRootspec="${KERNEL_ROOTSPEC_FLASHER}" ; cat >${D}/${KERNEL_IMAGEDEST}/extlinux/extlinux.conf_flasher << EOF
 DEFAULT primary
@@ -176,7 +180,7 @@ MENU TITLE Boot Options
 LABEL primary
       MENU LABEL primary ${KERNEL_IMAGETYPE}
       LINUX /${KERNEL_IMAGETYPE}
-      APPEND ${KERNEL_ARGS} ${kernelRootspec} \${os_cmdline}
+      APPEND \${cbootargs} ${kernelRootspec} \${os_cmdline} sdhci_tegra.en_boot_part_access=1
 EOF
 }
 
